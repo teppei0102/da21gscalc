@@ -176,7 +176,10 @@ C	===============================================================
 
 	implicit none
 
-C	--- Arguments
+C     minoda added:
+        real*8 Tspin,xcoll,A10,nHI,ne,np,KHH,KeH,KpH
+C     -----------------------------------------------
+C     --- Arguments
 	real*8 Trad,Tmat
         real*8 OmegaT,OmegaB,H,HO,HOinp,bigH,G,OmegaL,OmegaK,OmegaC
 	real*8 z,n,x,x0,rhs,x_H,x_He,x_H0,x_He0
@@ -314,7 +317,8 @@ c	Set initial matter temperature
 	y(1) = x_H0
 	y(2) = x_He0
 
-c	OK that's the initial conditions, now start writing output file
+c     OK that's the initial conditions, now start writing output file
+
 
 	open(unit=7,status='replace',form='formatted',file=fileout)
 c$$$	write(7,'(1x,''  z   '',1x,''    x_e  '')')
