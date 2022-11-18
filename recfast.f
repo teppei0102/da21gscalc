@@ -177,7 +177,7 @@ C	===============================================================
 	implicit none
 
 C     minoda added:
-        real*8 Tspin,xcoll,A10,nHI,ne,np,KHH,KeH,KpH
+        real*8 Tspin,xcoll,A10,nHI,ne,np,KHH,KeH,KpH,lnt,dTb
 C     -----------------------------------------------
 C     --- Arguments
 	real*8 Trad,Tmat
@@ -252,8 +252,8 @@ c	will output every 10 in z, but this is easily changed also
 C     minoda wrote to avoid input params every time
         OmegaB=0.0491685227
         OmegaC=0.3156-OmegaB
-        OmegaL=1.0-OmegaB
-c$$$	write(*,*)'Enter Omega_B, Omega_DM, Omega_vac (e.g. 0.05 0.95 0)'
+        OmegaL=1.0-0.3156
+c$$$  write(*,*)'Enter Omega_B, Omega_DM, Omega_vac (e.g. 0.05 0.95 0)'
 c$$$  read(*,*)OmegaB,OmegaC,OmegaL
 	OmegaT=OmegaC+OmegaB            !total dark matter + baryons
 	OmegaK=1.d0-OmegaT-OmegaL	!curvature
@@ -321,6 +321,7 @@ c     OK that's the initial conditions, now start writing output file
 
 
 	open(unit=7,status='replace',form='formatted',file=fileout)
+        write(7,*)"####zend, x, Tmat, Tspin, Trad, dTb"
 c$$$	write(7,'(1x,''  z   '',1x,''    x_e  '')')
 
 
@@ -421,10 +422,45 @@ C He is 99% singly ionized, and *then* switch to joint H/He recombination.
 	  x_He = y(2)
 	  x = x0
 
+C     minoda added: calculate Tspin, (ref:21cmFAST paper, arxiv:1003.3878)
+C     approximating Lyman alpha coupling is negligible.
+c$$$  real*8 Tspin,xcoll,A10,nHI,ne,np,KHH,KeH,KpH
+C     now considering only HH collisional
+C     (neglecting eH and pH because of Dark ages calculation)
+          A10 = 2.85d-15
+          nHI = Nnow*(1.d0+zend)**3*(1.0-x_H)
+          if(Tmat<1.0)then
+             KHH = 1.380d-19
+          else if(Tmat>10000.0)then
+             KHH = 7.870e-16
+          else
+             lnt=dLog(Tmat)
+             KHH=-4.34289510d1+2.16894228*lnt-6.73666541*lnt*lnt
+             KHH=KHH+7.38234512 *lnt*lnt*lnt
+             KHH=KHH-3.46789178*lnt*lnt*lnt*lnt
+             KHH=KHH+8.87827433d-1 *lnt*lnt*lnt*lnt*lnt
+             KHH=KHH-1.34182754d-1*lnt*lnt*lnt*lnt*lnt*lnt
+             KHH=KHH+1.19968634d-2 *lnt*lnt*lnt*lnt*lnt*lnt*lnt
+             KHH=KHH-5.88215431d-4*lnt*lnt*lnt*lnt*lnt*lnt*lnt*lnt
+             KHH=KHH+1.22111242d-5*lnt*lnt*lnt*lnt*lnt*lnt*lnt*lnt*lnt
+             KHH=dexp(KHH)
+          end if
+
+C     to be updated in the future...............
+          ne = 0.0
+          np = 0.0
+          KeH = 0.0
+          KpH = 0.0
+C     ...........................................
+          xcoll=0.0628/Trad/A10*(nHI*KHH+ne*KeH+np*KpH)
+          Tspin = (1.0+xcoll)*Trad*Tmat/(Tmat+xcoll*Trad)
+          dTb = 27.0*(1.0-x_H)*OmegaB*H*H/0.023
+          dTb = dTb*dsqrt(0.15/OmegaT/H/H*0.1*(1.0+zend))
+          dTb = dTb*(1.0-Trad/Tspin)
 c$$$	  write(7,'(1x,f7.2,2x,g12.5)')
 c$$$  $         zend,x
           if(zend.le.500.0.and.zend.ge.10.0)then
-             write(7,*)zend,x,Tmat
+             write(7,*)zend,x,Tmat,Tspin,Trad,dTb
 c$$$             write(7,"(2x,f6.2,3x,e11.5,4x,f6.1,8x,f6.1)")
 c$$$     $            zend,x,Trad,Tmat
           end if
