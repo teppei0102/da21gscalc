@@ -447,8 +447,8 @@ C     (neglecting eH and pH because of Dark ages calculation)
           end if
 
 C     to be updated in the future...............
-          ne = 0.0
-          np = 0.0
+          ne = Nnow*(1.d0+zend)**3*x
+          np = Nnow*(1.d0+zend)**3*x_H
           KeH = 0.0
           KpH = 0.0
 C     ...........................................
